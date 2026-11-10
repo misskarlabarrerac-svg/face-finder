@@ -219,8 +219,8 @@ io.on('connection', socket => {
     const m = myMatch(); if (!m || m.phase !== 'choose' || !validChar(charId)) return;
     m.picks[me.id] = charId;
     if (m.players.every(id => m.picks[id] != null)) {
-      m.phase = 'play'; m.turn = m.players[Math.floor(Math.random() * 2)];
-      pushLog(m.log, { type: 'sys', text: `Both players are ready. ${room.players.get(m.turn).name} asks first.` });
+      m.phase = 'play';
+      pushLog(m.log, { type: 'sys', text: 'Both players are ready. Start asking questions out loud!' });
     }
   }));
 
@@ -264,14 +264,13 @@ io.on('connection', socket => {
       } else pushLog(room.group.log, { type: 'miss', from: me.id, fromName: me.name, text: `${me.name} guessed ${name}. Wrong!`, charId });
       return;
     }
-    const m = myMatch(); if (!m || m.phase !== 'play' || m.turn !== me.id || m.pending) return;
+    const m = myMatch(); if (!m || m.phase !== 'play') return;
     const o = other(m);
     if (m.picks[o] === charId) {
       m.phase = 'over'; m.winner = me.id; me.score++;
       pushLog(m.log, { type: 'win', from: me.id, text: `${me.name} guessed ${name}. Correct!` });
     } else {
-      pushLog(m.log, { type: 'miss', from: me.id, text: `${me.name} guessed ${name}. Wrong! Turn passes.` });
-      m.turn = o;
+      pushLog(m.log, { type: 'miss', from: me.id, text: `${me.name} guessed ${name}. Wrong!` });
     }
   }));
 
@@ -283,8 +282,8 @@ io.on('connection', socket => {
 
   socket.on('rematch', guard(() => {
     const m = myMatch(); if (!m || m.phase !== 'over') return;
-    m.picks = {}; m.phase = 'choose'; m.turn = null; m.pending = null; m.winner = null;
-    pushLog(m.log, { type: 'sys', text: `New game! Choose a new secret character.` });
+    m.picks = {}; m.phase = 'choose'; m.winner = null;
+    pushLog(m.log, { type: 'sys', text: 'New game! Choose a new secret person.' });
     for (const id of m.players) room.players.get(id).flipped = new Set();
   }));
 

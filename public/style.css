@@ -194,3 +194,6 @@ label { font-weight: 800; font-size: 14px; }
 .toast.error { background: var(--no); }
 .secret .face.mystery { background: var(--table); }
 .link-row .btn { white-space: nowrap; }
+.guesser-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.gcard { grid-template-columns: 130px 1fr; align-items: center; }
+.gcard img { width: 130px; }

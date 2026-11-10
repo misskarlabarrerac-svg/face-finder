@@ -3,10 +3,12 @@
 Juego en vivo para clase: los estudiantes entran con un **código de 4 letras**, un **link** o un **código QR**, sin crear cuentas.
 
 ## Modos
-- **1 vs 1 Classic**: el sistema arma parejas al azar. Cada estudiante elige una persona secreta y por turnos hacen preguntas de sí/no ("Does your person have glasses?"). Quien adivina gana. Si hay un número impar de estudiantes, el que sobra espera hasta que otro quede libre ("New partner").
-- **Mystery Face (grupo)**: los *Guessers* reciben una persona que no pueden ver. Los *Describers* sí la ven (con su descripción en inglés) y responden con respuestas cortas completas ("Yes, you are." / "No, you don't."). Puede haber uno o varios guessers a la vez; cada acierto suma un punto.
+Todo se juega **de forma oral**, como en persona. La app solo muestra los personajes, permite bajar cartas y hacer la adivinanza final. No hay chat ni descripciones escritas.
 
-Si el profesor crea la partida sin marcar "I will play too", tiene una **vista de profesor**: ve todas las parejas, sus personas secretas y las preguntas que escriben.
+- **1 vs 1 Classic**: el sistema arma parejas al azar. Cada estudiante elige su persona secreta. Se hacen preguntas en voz alta ("Does your person have glasses?"), bajan las cartas que descartan y, cuando creen saberlo, pulsan **Make a guess**. Si hay un número impar, el que sobra espera hasta que otro quede libre.
+- **Mystery Face (grupo)**: los *Guessers* reciben una persona que no pueden ver; solo ven el tablero. Los *Describers* ven la persona de cada guesser y responden en voz alta ("Yes, you are." / "No, you don't."). Puede haber uno o varios guessers; cada acierto suma un punto.
+
+Si el profesor crea la partida sin marcar "I will play too", tiene una **vista de profesor** con todas las parejas, sus personas secretas y sus intentos.
 
 ## Probarlo en tu computador
 Necesitas Node.js 18 o más reciente.

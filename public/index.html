@@ -16,7 +16,7 @@
       <div class="logo" aria-hidden="true"><span>?</span></div>
       <div>
         <h1>Face Finder</h1>
-        <p class="tag">Describe people in English. Ask, answer, guess.</p>
+        <p class="tag">Describe people in English. Ask out loud, flip cards, guess.</p>
       </div>
     </header>
 
@@ -41,14 +41,14 @@
             <input type="radio" name="mode" value="classic" checked>
             <span class="mode-card">
               <b>1 vs 1 Classic</b>
-              <small>Students play in pairs. Each one chooses a secret person. Take turns asking yes/no questions to guess your partner's person.</small>
+              <small>Students play in pairs. Each one chooses a secret person. They ask yes/no questions out loud and flip down the people on their board.</small>
             </span>
           </label>
           <label class="mode">
             <input type="radio" name="mode" value="group">
             <span class="mode-card">
               <b>Mystery Face (group)</b>
-              <small>Guessers get a person they can't see. The describers can see it and answer the guessers' questions: "Do I have glasses?"</small>
+              <small>Guessers get a person they can't see. Describers can see it and answer out loud: "Do I have glasses?"</small>
             </span>
           </label>
         </fieldset>
@@ -107,16 +107,8 @@
       <aside class="side">
         <div id="sideInfo"></div>
         <div class="chat panel" id="chatPanel">
-          <h3>Questions and answers</h3>
+          <h3>Game activity</h3>
           <ol id="log" class="log"></ol>
-          <div id="answerArea"></div>
-          <form id="askForm" class="ask">
-            <div class="chips" id="chips"></div>
-            <div class="ask-row">
-              <input id="askInput" maxlength="160" autocomplete="off" placeholder="Write a question in English…">
-              <button class="btn primary" type="submit">Ask</button>
-            </div>
-          </form>
         </div>
       </aside>
     </div>

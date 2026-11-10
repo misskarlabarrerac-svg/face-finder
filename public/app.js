@@ -1,5 +1,5 @@
 /* Face Finder client */
-const { CHARACTERS, describe } = window.GW;
+const { CHARACTERS } = window.GW;
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const store = {
@@ -74,50 +74,6 @@ document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal
 
 const nameOf = (id) => id === S.me.id ? 'You' : (S.players.find(p => p.id === id)?.name || 'Someone');
 const cardImg = (c) => `<img src="${c.img}" alt="${esc(c.name)}" loading="lazy">`;
-
-function shortAnswers(q, pron) {
-  const s = q.trim().toLowerCase();
-  const P = pron === 'you' ? 'you' : pron;
-  if (/^do i\b/.test(s)) return ['Yes, you do.', "No, you don't."];
-  if (/^am i\b/.test(s)) return ['Yes, you are.', "No, you aren't."];
-  if (/^have i\b/.test(s)) return ['Yes, you have.', "No, you haven't."];
-  const subj = /\bhe\b/.test(s) ? 'he' : /\bshe\b/.test(s) ? 'she' : P;
-  if (/^does\b/.test(s)) return [`Yes, ${subj} does.`, `No, ${subj} doesn't.`];
-  if (/^is\b/.test(s)) return [`Yes, ${subj} is.`, `No, ${subj} isn't.`];
-  if (/^has\b/.test(s)) return [`Yes, ${subj} has.`, `No, ${subj} hasn't.`];
-  return ['Yes.', 'No.'];
-}
-
-const FEATURES = [
-  'short hair', 'long hair', 'curly hair', 'blonde hair', 'brown hair', 'black hair', 'red hair', 'gray hair', 'bald',
-  'blue eyes', 'brown eyes', 'green eyes', 'glasses', 'a beard', 'a mustache', 'freckles',
-  'a hat', 'earrings', 'a necklace', 'a man', 'a woman', 'young', 'old', 'light skin', 'dark skin',
-  'a blue top', 'a red top', 'a green top', 'a yellow top', 'a purple top',
-];
-let chipsFor = null;
-function renderChips(group) {
-  const key = group ? 'g' : 'c';
-  if (chipsFor === key) return; chipsFor = key;
-  const starts = group ? ['Do I have', 'Am I', 'Am I wearing', 'Have I got'] : ['Does your person have', 'Is your person', 'Is your person wearing', 'Has your person got'];
-  $('chips').innerHTML = starts.map(s => `<button type="button" class="chip start" data-s="${s}">${s}…</button>`).join('') +
-    FEATURES.map(f => `<button type="button" class="chip" data-f="${f}">${f}</button>`).join('');
-}
-$('chips').addEventListener('click', (e) => {
-  const b = e.target.closest('.chip'); if (!b) return;
-  const inp = $('askInput');
-  if (b.dataset.s) inp.value = b.dataset.s + ' ';
-  else inp.value = (inp.value.replace(/\?\s*$/, '').trim() + ' ' + b.dataset.f).trim() + '?';
-  inp.focus();
-});
-$('askForm').addEventListener('submit', (e) => {
-  e.preventDefault();
-  let t = $('askInput').value.trim(); if (!t) return;
-  if (!/[?]$/.test(t)) t += '?';
-  t = t[0].toUpperCase() + t.slice(1);
-  socket.emit('ask', { text: t }); $('askInput').value = '';
-});
-
-/* ---------- render ---------- */
 function show(id) { for (const s of ['home', 'lobby', 'game']) $(s).hidden = s !== id; }
 
 function render() {
@@ -135,8 +91,8 @@ function renderLobby() {
   const group = S.mode === 'group';
   $('lobbyMode').textContent = group ? 'Mystery Face (group)' : '1 vs 1 Classic';
   $('lobbyHint').textContent = group
-    ? 'Choose a role. Guessers get a hidden person and ask questions. Describers see it and answer. Each player can change their role; the host can change anyone\'s.'
-    : 'When the game starts, players are put into random pairs automatically.';
+    ? 'Choose a role. Guessers get a hidden person and ask questions out loud. Describers see it and answer out loud.'
+    : 'When the game starts, players are put into random pairs. Sit with your partner and play out loud.';
   $('lobbyTitle').textContent = `Players (${S.players.length})`;
   $('playerList').innerHTML = S.players.map(p => {
     const isMe = p.id === S.me.id, canEdit = isMe || S.isHost;
@@ -174,6 +130,7 @@ $('hostTools').addEventListener('click', (e) => {
   if (t === 'newRound') return modal('<h2>Start a new round?</h2><p>Every guesser gets a new person and the questions are cleared.</p>', [{ label: 'New round', cls: 'coral', fn: () => socket.emit('newRound') }, { label: 'Cancel' }]);
 });
 
+
 function renderBoard({ clickable = true, highlight = null } = {}) {
   const flipped = new Set(S.flipped);
   $('board').classList.toggle('guessing', guessMode);
@@ -189,12 +146,12 @@ $('board').addEventListener('click', (e) => {
   const m = S.match;
   if (S.mode === 'classic' && m && m.phase === 'choose') {
     if (m.myPick != null) return;
-    return modal(`${cardImg(c)}<h2>${esc(c.name)}</h2><p class="desc">${esc(describe(c))}</p><p>Choose ${esc(c.name)} as your secret person?</p>`,
+    return modal(`${cardImg(c)}<h2>${esc(c.name)}</h2><p>Choose ${esc(c.name)} as your secret person?</p>`,
       [{ label: 'Yes, choose', cls: 'coral', fn: () => socket.emit('pick', { charId: c.id }) }, { label: 'Cancel' }]);
   }
   if (guessMode) {
     return modal(`${cardImg(c)}<h2>Is it ${esc(c.name)}?</h2><p>Make your final guess.</p>`,
-      [{ label: `Guess ${c.name}`, cls: 'coral', fn: () => { guessMode = false; socket.emit('guess', { charId: c.id }); } }, { label: 'Cancel', fn: () => {} }]);
+      [{ label: `Guess ${c.name}`, cls: 'coral', fn: () => { guessMode = false; socket.emit('guess', { charId: c.id }); render(); } }, { label: 'Cancel' }]);
   }
   b.classList.toggle('down');
   socket.emit('flip', { charId: c.id });
@@ -207,19 +164,33 @@ $('boardActions').addEventListener('click', (e) => {
   if (a === 'reset') socket.emit('resetFlips');
   if (a === 'skip') modal('<h2>Give up?</h2><p>You will see who you were and get a new person.</p>', [{ label: 'Give up', cls: 'coral', fn: () => socket.emit('skip') }, { label: 'Keep playing' }]);
   if (a === 'partner') socket.emit('newPartner');
+  if (a === 'rematch') socket.emit('rematch');
 });
 
 function renderGame() {
   $('gameCode').textContent = S.code;
   $('hostTools').innerHTML = hostTools();
-  $('helperView').hidden = true; $('monitorView').hidden = true; $('board').hidden = false;
-  $('chatPanel').hidden = false; $('askForm').hidden = false; $('answerArea').innerHTML = '';
+  $('helperView').hidden = true; $('monitorView').hidden = true; $('board').hidden = false; $('chatPanel').hidden = false;
   if (S.mode === 'classic') renderClassic(); else renderGroup();
 }
 
+function popups(log) {
+  for (const e of log) {
+    if (seen.has(e.id)) continue; seen.add(e.id);
+    if (firstState) continue;
+    const mine = e.from === S.me.id;
+    if (e.type === 'miss') toast(mine ? 'Wrong guess. Keep asking!' : e.text, 'error');
+    if (e.type === 'win' && S.mode === 'group' && mine) {
+      const c = CHARACTERS[e.charId];
+      modal(`${cardImg(c)}<h2>You guessed it!</h2><p>You were <b>${esc(c.name)}</b>. Here comes a new mystery person.</p>`, [{ label: 'Next person', cls: 'coral' }]);
+    }
+  }
+}
+
+const activity = (log) => log.map(e => ({ cls: e.type === 'q' || e.type === 'a' ? 'sys' : e.type, text: e.text || '' })).filter(e => e.text);
+
 /* ---------- classic ---------- */
 function renderClassic() {
-  renderChips(false);
   if (S.monitor) return renderMonitor();
   const m = S.match;
   if (!m) {
@@ -231,8 +202,8 @@ function renderClassic() {
     $('chatPanel').hidden = true;
     return;
   }
+  popups(m.log);
   const opp = m.opponent;
-  const myTurn = m.turn === S.me.id;
   const mine = m.myPick != null ? CHARACTERS[m.myPick] : null;
   if (m.phase !== 'play') guessMode = false;
   if (m.phase === 'choose') {
@@ -240,11 +211,9 @@ function renderClassic() {
     $('boardTitle').textContent = m.myPick == null ? 'Tap a person to choose' : 'Your board';
     $('boardActions').innerHTML = '';
   } else if (m.phase === 'play') {
-    $('status').innerHTML = myTurn ? (m.pending ? `Waiting for ${esc(opp.name)} to answer…` : '<span class="pill turn">Your turn</span> Ask a question or make a guess') : (m.pending ? `${esc(opp.name)} asked you a question` : `${esc(opp.name)} is thinking…`);
-    $('boardTitle').textContent = 'Tap to turn people down';
-    const canGuess = myTurn && !m.pending;
-    if (!canGuess) guessMode = false;
-    $('boardActions').innerHTML = `<button class="btn small" data-act="reset">Turn all up</button><button class="btn small ${guessMode ? 'sun' : 'coral'}" data-act="guess" ${canGuess ? '' : 'disabled'}>${guessMode ? 'Cancel guess' : 'Make a guess'}</button>`;
+    $('status').innerHTML = `Ask <b>${esc(opp.name)}</b> questions out loud. Flip down the people it can't be.`;
+    $('boardTitle').textContent = 'Tap to flip people down';
+    $('boardActions').innerHTML = `<button class="btn small" data-act="reset">Flip all up</button><button class="btn small ${guessMode ? 'sun' : 'coral'}" data-act="guess">${guessMode ? 'Cancel guess' : 'Make a guess'}</button>`;
   } else {
     $('status').textContent = m.winner === S.me.id ? 'You won!' : `${opp.name} won this game`;
     $('boardActions').innerHTML = `<button class="btn small coral" data-act="rematch">Play again</button><button class="btn small" data-act="partner">New partner</button>`;
@@ -254,34 +223,14 @@ function renderClassic() {
   const oppC = m.oppPick != null ? CHARACTERS[m.oppPick] : null;
   $('sideInfo').innerHTML = `<div class="panel">
     <div class="secret">
-      <div class="face">${mine ? cardImg(mine) : '<div class="mystery" style="height:100%">?</div>'}</div>
+      <div class="face ${mine ? '' : 'mystery'}">${mine ? cardImg(mine) : '?'}</div>
       <div><span class="eyebrow">Your secret person</span><h3>${mine ? esc(mine.name) : 'Not chosen yet'}</h3>
-      ${mine ? `<p class="desc">${esc(describe(mine))}</p>` : ''}</div>
+      <p class="hint">Answer your partner's questions about this person.</p></div>
     </div>
     <div class="vs"><span class="pill">Partner: ${esc(opp.name)}${opp.connected ? '' : ' (offline)'}</span><span class="pill">${m.oppPicked ? 'Partner is ready' : 'Partner is choosing'}</span><span class="pill mint">Your wins: ${S.me.score}</span></div>
     ${oppC ? `<div class="secret"><div class="face">${cardImg(oppC)}</div><div><span class="eyebrow">${esc(opp.name)}'s person</span><h3>${esc(oppC.name)}</h3></div></div>` : ''}
   </div>`;
-
-  // log
-  renderLog(m.log.map(e => {
-    if (e.type === 'q') return { cls: e.from === S.me.id ? 'me' : '', who: nameOf(e.from) + (e.from === S.me.id ? ' asked' : ' asks'), text: e.text, id: e.id };
-    if (e.type === 'a') return { cls: 'a-' + (e.answer || ''), who: nameOf(e.from) + ' answered', text: e.text || e.answer, id: e.id };
-    return { cls: e.type, text: e.text, id: e.id };
-  }));
-
-  // answer box when opponent asked
-  if (m.phase === 'play' && m.pending && !myTurn) {
-    const q = m.log.find(x => x.id === m.pending);
-    const [y, n] = shortAnswers(q.text, mine?.g === 'f' ? 'she' : 'he');
-    $('answerArea').innerHTML = `<div class="answer-box"><span class="eyebrow">${esc(opp.name)} asks</span><div class="q">${esc(q.text)}</div>
-      <p class="desc">Look at ${esc(mine.name)} and answer.</p>
-      <div class="answer-btns">
-        <button class="btn mint" data-ans="yes" data-t="${esc(y)}" data-q="${q.id}">${esc(y)}</button>
-        <button class="btn no" data-ans="no" data-t="${esc(n)}" data-q="${q.id}">${esc(n)}</button>
-        <button class="btn" data-ans="maybe" data-t="I'm not sure." data-q="${q.id}">I'm not sure.</button>
-      </div></div>`;
-  }
-  $('askForm').hidden = !(m.phase === 'play' && myTurn && !m.pending);
+  renderLog(activity(m.log));
 
   if (m.phase === 'over' && overShown !== m.id + m.log.length) {
     overShown = m.id + m.log.length;
@@ -290,91 +239,56 @@ function renderClassic() {
       [{ label: 'Play again', cls: 'coral', fn: () => socket.emit('rematch') }, { label: 'Close' }]);
   }
 }
-$('boardActions').addEventListener('click', (e) => { if (e.target.closest('[data-act=rematch]')) socket.emit('rematch'); });
-$('answerArea').addEventListener('click', (e) => {
-  const b = e.target.closest('[data-ans]'); if (!b) return;
-  socket.emit('answer', { qid: b.dataset.q, answer: b.dataset.ans, text: b.dataset.t });
-});
 
 function renderMonitor() {
   $('status').textContent = 'Teacher view';
-  $('boardTitle').textContent = `Matches (${S.monitor.length})`;
+  $('boardTitle').textContent = `Pairs (${S.monitor.length})`;
   $('boardActions').innerHTML = '';
   $('board').hidden = true; $('chatPanel').hidden = true;
   const v = $('monitorView'); v.hidden = false;
   v.innerHTML = (S.waitingNames?.length ? `<p class="white-hint">Waiting for a partner: ${S.waitingNames.map(esc).join(', ')}</p>` : '') +
     (S.monitor.length ? `<div class="match-list">${S.monitor.map(m => `<div class="mcard">
-      <div class="pair">${m.players.map(p => `<div class="p">${p.pick != null ? `<img src="${CHARACTERS[p.pick].img}" alt="${esc(CHARACTERS[p.pick].name)}">` : '<div class="q">?</div>'}<span>${esc(p.name)}${m.winner === p.id ? ' 🏆' : ''}</span></div>`).join('')}</div>
+      <div class="pair">${m.players.map(p => `<div class="p">${p.pick != null ? `<img src="${CHARACTERS[p.pick].img}" alt="${esc(CHARACTERS[p.pick].name)}">` : '<div class="q">?</div>'}<span>${esc(p.name)}${m.winner === p.id ? ' (won)' : ''}</span></div>`).join('')}</div>
       <span class="pill">${m.phase === 'choose' ? 'Choosing people' : m.phase === 'play' ? 'Playing' : 'Finished'}</span>
-      <ol>${m.log.filter(e => e.type !== 'sys').map(e => `<li><b>${esc(S.players.find(p => p.id === e.from)?.name || '')}:</b> ${esc(e.text || e.answer)}</li>`).join('') || '<li>No questions yet.</li>'}</ol>
-    </div>`).join('')}</div>` : '<p class="white-hint">No matches yet. Players need a partner to start.</p>');
-  $('sideInfo').innerHTML = `<div class="panel"><h3>You are the teacher</h3><p class="hint">You can see every pair, their secret people and the questions they ask. Use “New pairs” to mix the class.</p>
+      <ol>${m.log.filter(e => e.type === 'win' || e.type === 'miss').map(e => `<li>${esc(e.text)}</li>`).join('') || '<li>No guesses yet.</li>'}</ol>
+    </div>`).join('')}</div>` : '<p class="white-hint">No pairs yet. Players need a partner to start.</p>');
+  $('sideInfo').innerHTML = `<div class="panel"><h3>You are the teacher</h3><p class="hint">You can see every pair, their secret people and their guesses. Use “New pairs” to mix the class.</p>
     <p class="hint">Players: ${S.players.filter(p => p.id !== S.hostId).length}</p></div>`;
 }
 
 /* ---------- group ---------- */
 function renderGroup() {
-  renderChips(true);
   const G = S.group;
   const guesser = S.me.role === 'guesser';
-  const log = G.log;
-
-  // popups for my wins / misses
-  for (const e of log) {
-    if (seen.has(e.id)) continue; seen.add(e.id);
-    if (firstState || e.from !== S.me.id) continue;
-    if (e.type === 'win') { const c = CHARACTERS[e.charId]; modal(`${cardImg(c)}<h2>You guessed it!</h2><p>You were <b>${esc(c.name)}</b>. You get a new mystery person now.</p>`, [{ label: 'Next person', cls: 'coral' }]); }
-    if (e.type === 'miss') toast('Wrong guess. Keep asking!', 'error');
-  }
-
+  popups(G.log);
+  const events = G.log.filter(e => e.type !== 'q');
   if (guesser) {
-    $('status').innerHTML = '<span class="pill turn">Guesser</span> Ask questions about yourself';
-    $('boardTitle').textContent = 'Who are you? Tap to turn people down';
-    $('boardActions').innerHTML = `<button class="btn small" data-act="reset">Turn all up</button><button class="btn small" data-act="skip">Give up</button><button class="btn small ${guessMode ? 'sun' : 'coral'}" data-act="guess">${guessMode ? 'Cancel guess' : 'Make a guess'}</button>`;
+    $('status').innerHTML = '<span class="pill turn">Guesser</span> Ask the describers out loud: “Do I have…?” “Am I…?”';
+    $('boardTitle').textContent = 'Who are you? Tap to flip people down';
+    $('boardActions').innerHTML = `<button class="btn small" data-act="reset">Flip all up</button><button class="btn small" data-act="skip">Give up</button><button class="btn small ${guessMode ? 'sun' : 'coral'}" data-act="guess">${guessMode ? 'Cancel guess' : 'Make a guess'}</button>`;
     renderBoard({ clickable: true });
-    $('sideInfo').innerHTML = `<div class="panel"><div class="secret"><div class="face mystery">?</div><div><span class="eyebrow">Your mystery person</span><h3>Who am I?</h3><p class="desc">Ask yes/no questions: “Do I have glasses?” “Am I wearing a hat?”</p></div></div>
+    $('sideInfo').innerHTML = `<div class="panel"><div class="secret"><div class="face mystery">?</div><div><span class="eyebrow">Your mystery person</span><h3>Who am I?</h3></div></div>
       <div class="vs"><span class="pill mint">Points: ${S.me.score}</span>${G.guessers.filter(g => g.id !== S.me.id).map(g => `<span class="pill">${esc(g.name)}: ${g.score}</span>`).join('')}</div></div>`;
-    const mine = log.filter(e => e.from === S.me.id || e.type === 'win' || e.type === 'sys');
-    renderLog(mine.map(e => e.type === 'q' ? { cls: 'me', who: 'You asked', text: e.text, id: e.id, answers: e.answers } : { cls: e.type, text: e.text, id: e.id }));
   } else {
     guessMode = false;
-    $('status').innerHTML = '<span class="pill">Describer</span> Look at the guessers\' people and answer their questions';
+    $('status').innerHTML = '<span class="pill">Describer</span> Answer the guessers out loud. Don\'t say the name!';
     $('boardTitle').textContent = 'The guessers and their people';
     $('boardActions').innerHTML = '';
     $('board').hidden = true;
     const v = $('helperView'); v.hidden = false;
     v.innerHTML = G.guessers.length ? `<div class="guesser-grid">${G.guessers.map(g => {
       const c = g.secret != null ? CHARACTERS[g.secret] : null;
-      return `<div class="gcard">${c ? cardImg(c) : ''}<div style="min-width:0"><b>${esc(g.name)}</b><span class="pill mint">Points: ${g.score}</span>${c ? `<p class="desc"><b style="font-size:1rem;display:inline">${esc(c.name)}.</b> ${esc(describe(c))}</p>` : ''}</div></div>`;
+      return `<div class="gcard">${c ? cardImg(c) : ''}<div style="min-width:0"><span class="eyebrow">Guesser</span><b>${esc(g.name)}</b><span class="pill mint">Points: ${g.score}</span></div></div>`;
     }).join('')}</div>` : '<p class="white-hint">There are no guessers yet. The host can change roles in the lobby.</p>';
-    $('sideInfo').innerHTML = `<div class="panel"><h3>You are a describer</h3><p class="hint">Answer each question with a full short answer. Don't say the name!</p></div>`;
-    $('askForm').hidden = true;
-    renderLog(log.map(e => e.type === 'q'
-      ? { cls: '', who: `${e.fromName} asks`, text: e.text, id: e.id, answers: e.answers, answerable: true, from: e.from }
-      : { cls: e.type, text: e.text, id: e.id }));
+    $('sideInfo').innerHTML = `<div class="panel"><h3>You are a describer</h3><p class="hint">Look at each guesser's person and answer their questions out loud.</p></div>`;
   }
+  renderLog(activity(events));
 }
-$('log').addEventListener('click', (e) => {
-  const b = e.target.closest('[data-gans]'); if (!b) return;
-  socket.emit('answer', { qid: b.dataset.q, answer: b.dataset.gans, text: b.dataset.t });
-});
 
-/* ---------- log ---------- */
+/* ---------- activity ---------- */
 function renderLog(items) {
   const el = $('log');
-  const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
-  const prevCount = el.children.length;
-  if (!items.length) { el.innerHTML = '<li class="empty">No questions yet.</li>'; return; }
-  el.innerHTML = items.map(it => {
-    let extra = '';
-    if (it.answers) {
-      extra += it.answers.length ? `<div class="answers">${it.answers.map(a => `<span class="ans ${a.answer}">${esc(a.by === S.me.id ? 'You' : a.name)}: ${esc(a.text || a.answer)}</span>`).join('')}</div>` : (it.answerable ? '' : '<div class="answers"><span class="ans">Waiting for an answer…</span></div>');
-    }
-    if (it.answerable && it.from !== S.me.id) {
-      const [y, n] = shortAnswers(it.text, 'you');
-      extra += `<div class="qbtns"><button class="btn small mint" data-gans="yes" data-t="${esc(y)}" data-q="${it.id}">${esc(y)}</button><button class="btn small no" data-gans="no" data-t="${esc(n)}" data-q="${it.id}">${esc(n)}</button><button class="btn small" data-gans="maybe" data-t="I'm not sure." data-q="${it.id}">Not sure</button></div>`;
-    }
-    return `<li class="${it.cls}">${it.who ? `<span class="who">${esc(it.who)}</span>` : ''}${esc(it.text)}${extra}</li>`;
-  }).join('');
-  if (atBottom || items.length !== prevCount) el.scrollTop = el.scrollHeight;
+  if (!items.length) { el.innerHTML = '<li class="empty">Nothing yet.</li>'; return; }
+  el.innerHTML = items.map(it => `<li class="${it.cls}">${esc(it.text)}</li>`).join('');
+  el.scrollTop = el.scrollHeight;
 }
