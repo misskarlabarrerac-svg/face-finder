@@ -92,16 +92,28 @@ function renderLobby() {
   $('lobbyMode').textContent = group ? 'Mystery Face (group)' : '1 vs 1 Classic';
   $('lobbyHint').textContent = group
     ? 'Choose a role. Guessers get a hidden person and ask questions out loud. Describers see it and answer out loud.'
-    : 'When the game starts, players are put into random pairs. Sit with your partner and play out loud.';
+    : 'Tap “Choose” next to your partner\'s name. When you both choose each other, you are a pair. Players without a pair get a random partner when the game starts.';
   $('lobbyTitle').textContent = `Players (${S.players.length})`;
+  const byId = Object.fromEntries(S.players.map(p => [p.id, p]));
+  const mutual = (p) => p.partner && byId[p.partner]?.partner === p.id;
+  const choosing = !group && !(S.isHost && !S.hostPlays);
   $('playerList').innerHTML = S.players.map(p => {
     const isMe = p.id === S.me.id, canEdit = isMe || S.isHost;
     const hostTag = p.id === S.hostId ? ` <span class="pill">${S.hostPlays ? 'host' : 'teacher'}</span>` : '';
     const roles = group ? `<span class="role-toggle">
         <button type="button" data-role="guesser" data-pid="${p.id}" class="${p.role === 'guesser' ? 'on' : ''}" ${canEdit ? '' : 'disabled'}>Guesser</button>
         <button type="button" data-role="helper" data-pid="${p.id}" class="${p.role === 'helper' ? 'on' : ''}" ${canEdit ? '' : 'disabled'}>Describer</button></span>` : '';
+    let pair = '';
+    const playsClassic = !group && !(p.id === S.hostId && !S.hostPlays);
+    if (playsClassic) {
+      if (mutual(p)) pair = `<span class="pill mint">with ${esc(byId[p.partner].name)}</span>`;
+      else if (choosing && !isMe && !(p.id === S.hostId && !S.hostPlays)) {
+        const chosen = S.me.partner === p.id, wantsMe = p.partner === S.me.id;
+        pair = `<button type="button" class="btn small ${chosen ? 'sun' : wantsMe ? 'coral' : ''}" data-partner="${chosen ? '' : p.id}">${chosen ? 'Chosen ✓' : wantsMe ? 'Wants you!' : 'Choose'}</button>`;
+      } else if (isMe && p.partner) pair = `<span class="pill">waiting for ${esc(byId[p.partner]?.name || '')}</span>`;
+    }
     const kick = S.isHost && !isMe ? `<button type="button" class="btn small ghost" data-kick="${p.id}" aria-label="Remove ${esc(p.name)}">✕</button>` : '';
-    return `<li class="${p.connected ? '' : 'off'}"><span class="nm">${esc(p.name)}${isMe ? ' (you)' : ''}${hostTag}</span><span class="role-toggle">${roles}${kick}</span></li>`;
+    return `<li class="${p.connected ? '' : 'off'}"><span class="nm">${esc(p.name)}${isMe ? ' (you)' : ''}${hostTag}</span><span class="role-toggle">${roles}${pair}${kick}</span></li>`;
   }).join('');
   $('startBtn').hidden = !S.isHost;
   $('lobbyWait').textContent = S.isHost ? 'Start when everyone has joined.' : 'Waiting for the host to start the game…';
@@ -109,6 +121,7 @@ function renderLobby() {
 $('playerList').addEventListener('click', (e) => {
   const r = e.target.closest('[data-role]'); if (r && !r.disabled) socket.emit('setRole', { playerId: r.dataset.pid, role: r.dataset.role });
   const k = e.target.closest('[data-kick]'); if (k) socket.emit('kick', { playerId: k.dataset.kick });
+  const pt = e.target.closest('[data-partner]'); if (pt) socket.emit('choosePartner', { playerId: pt.dataset.partner || null });
 });
 $('startBtn').onclick = () => socket.emit('start');
 $('copyLink').onclick = () => {

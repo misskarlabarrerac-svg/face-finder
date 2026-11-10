@@ -50,8 +50,15 @@ function classicPlayers(room) {
 
 function startClassic(room) {
   room.matches.clear(); room.waiting = [];
-  const ps = classicPlayers(room).map(p => p.id).sort(() => Math.random() - .5);
-  for (const id of ps) { room.players.get(id).matchId = null; room.waiting.push(id); }
+  const players = classicPlayers(room);
+  for (const p of players) p.matchId = null;
+  // mutual partner choices first
+  for (const p of players) {
+    const q = p.partner && room.players.get(p.partner);
+    if (q && !p.matchId && !q.matchId && q.partner === p.id && players.includes(q)) makeMatch(room, p.id, q.id);
+  }
+  const rest = players.filter(p => !p.matchId).map(p => p.id).sort(() => Math.random() - .5);
+  room.waiting.push(...rest);
   pairWaiting(room);
 }
 
@@ -82,7 +89,7 @@ function pushLog(arr, entry) { arr.push(Object.assign({ id: rid(), t: Date.now()
 
 /* ---------- per-player view ---------- */
 function view(room, me) {
-  const pub = p => ({ id: p.id, name: p.name, role: p.role, score: p.score, connected: p.connected, matchId: p.matchId || null });
+  const pub = p => ({ id: p.id, name: p.name, role: p.role, score: p.score, connected: p.connected, matchId: p.matchId || null, partner: p.partner || null });
   const v = {
     code: room.code, mode: room.mode, phase: room.phase, hostId: room.hostId, hostPlays: room.hostPlays,
     me: pub(me), isHost: me.id === room.hostId, players: [...room.players.values()].map(pub),
@@ -168,6 +175,11 @@ io.on('connection', socket => {
 
   const guard = (fn) => (...args) => { if (!room || !me) return; try { fn(...args); } catch (e) { console.error(e); } broadcast(room); };
   const isHost = () => me.id === room.hostId;
+
+  socket.on('choosePartner', guard(({ playerId }) => {
+    const q = playerId && room.players.get(playerId);
+    me.partner = q && q.id !== me.id ? q.id : null;
+  }));
 
   socket.on('setRole', guard(({ playerId, role }) => {
     const target = room.players.get(playerId || me.id);

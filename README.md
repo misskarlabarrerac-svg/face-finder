@@ -5,7 +5,7 @@ Juego en vivo para clase: los estudiantes entran con un **código de 4 letras**,
 ## Modos
 Todo se juega **de forma oral**, como en persona. La app solo muestra los personajes, permite bajar cartas y hacer la adivinanza final. No hay chat ni descripciones escritas.
 
-- **1 vs 1 Classic**: el sistema arma parejas al azar. Cada estudiante elige su persona secreta. Se hacen preguntas en voz alta ("Does your person have glasses?"), bajan las cartas que descartan y, cuando creen saberlo, pulsan **Make a guess**. Si hay un número impar, el que sobra espera hasta que otro quede libre.
+- **1 vs 1 Classic**: en la sala de espera cada estudiante puede tocar **Choose** junto al nombre de su compañero; si los dos se eligen, quedan en pareja. Quien no elija pareja recibe una al azar al empezar. Cada estudiante elige su persona secreta. Se hacen preguntas en voz alta ("Does your person have glasses?"), bajan las cartas que descartan y, cuando creen saberlo, pulsan **Make a guess**. Si hay un número impar, el que sobra espera hasta que otro quede libre.
 - **Mystery Face (grupo)**: los *Guessers* reciben una persona que no pueden ver; solo ven el tablero. Los *Describers* ven la persona de cada guesser y responden en voz alta ("Yes, you are." / "No, you don't."). Puede haber uno o varios guessers; cada acierto suma un punto.
 
 Si el profesor crea la partida sin marcar "I will play too", tiene una **vista de profesor** con todas las parejas, sus personas secretas y sus intentos.
