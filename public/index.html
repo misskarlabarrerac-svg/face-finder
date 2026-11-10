@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Face Finder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@500;700;800&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <!-- HOME -->
+  <section id="home" class="screen">
+    <header class="brand">
+      <div class="logo" aria-hidden="true"><span>?</span></div>
+      <div>
+        <h1>Face Finder</h1>
+        <p class="tag">Describe people in English. Ask, answer, guess.</p>
+      </div>
+    </header>
+
+    <div class="home-grid">
+      <form id="joinForm" class="panel">
+        <h2>Join a game</h2>
+        <label for="joinCode">Game code</label>
+        <input id="joinCode" maxlength="4" autocomplete="off" placeholder="ABCD" class="code-input">
+        <label for="joinName">Your name</label>
+        <input id="joinName" maxlength="24" autocomplete="off" placeholder="e.g. Valentina">
+        <p class="err" id="joinErr" hidden></p>
+        <button class="btn primary big" type="submit">Join</button>
+      </form>
+
+      <form id="createForm" class="panel">
+        <h2>Create a game</h2>
+        <label for="createName">Your name</label>
+        <input id="createName" maxlength="24" autocomplete="off" placeholder="e.g. Miss Karla">
+        <fieldset class="modes">
+          <legend>Game mode</legend>
+          <label class="mode">
+            <input type="radio" name="mode" value="classic" checked>
+            <span class="mode-card">
+              <b>1 vs 1 Classic</b>
+              <small>Students play in pairs. Each one chooses a secret person. Take turns asking yes/no questions to guess your partner's person.</small>
+            </span>
+          </label>
+          <label class="mode">
+            <input type="radio" name="mode" value="group">
+            <span class="mode-card">
+              <b>Mystery Face (group)</b>
+              <small>Guessers get a person they can't see. The describers can see it and answer the guessers' questions: "Do I have glasses?"</small>
+            </span>
+          </label>
+        </fieldset>
+        <label class="check"><input type="checkbox" id="hostPlays"> I will play too <small>(leave unchecked if you are the teacher)</small></label>
+        <button class="btn coral big" type="submit">Create game</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- LOBBY -->
+  <section id="lobby" class="screen" hidden>
+    <div class="lobby-top panel">
+      <div class="code-block">
+        <span class="eyebrow">Game code</span>
+        <div class="big-code" id="lobbyCode">----</div>
+        <div class="link-row">
+          <input id="lobbyLink" readonly aria-label="Game link">
+          <button class="btn small" id="copyLink" type="button">Copy link</button>
+        </div>
+      </div>
+      <div id="qr" class="qr" aria-label="QR code to join"></div>
+    </div>
+    <div class="panel">
+      <div class="row-between">
+        <h2 id="lobbyTitle">Players</h2>
+        <span class="pill" id="lobbyMode"></span>
+      </div>
+      <p class="hint" id="lobbyHint"></p>
+      <ul id="playerList" class="player-list"></ul>
+      <div class="row-between wrap">
+        <p class="hint" id="lobbyWait"></p>
+        <button class="btn primary big" id="startBtn" type="button" hidden>Start game</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- GAME -->
+  <section id="game" class="screen" hidden>
+    <div class="topbar">
+      <div class="topbar-left">
+        <span class="mini-code" id="gameCode"></span>
+        <span class="status" id="status"></span>
+      </div>
+      <div class="topbar-right" id="hostTools"></div>
+    </div>
+    <div class="game-grid">
+      <div class="board-wrap">
+        <div class="board-head">
+          <h2 id="boardTitle">Board</h2>
+          <div class="board-actions" id="boardActions"></div>
+        </div>
+        <div id="board" class="board"></div>
+        <div id="helperView" hidden></div>
+        <div id="monitorView" hidden></div>
+      </div>
+      <aside class="side">
+        <div id="sideInfo"></div>
+        <div class="chat panel" id="chatPanel">
+          <h3>Questions and answers</h3>
+          <ol id="log" class="log"></ol>
+          <div id="answerArea"></div>
+          <form id="askForm" class="ask">
+            <div class="chips" id="chips"></div>
+            <div class="ask-row">
+              <input id="askInput" maxlength="160" autocomplete="off" placeholder="Write a question in English…">
+              <button class="btn primary" type="submit">Ask</button>
+            </div>
+          </form>
+        </div>
+      </aside>
+    </div>
+  </section>
+</div>
+
+<div id="modal" class="modal" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true">
+    <div id="modalBody"></div>
+    <div class="modal-actions" id="modalActions"></div>
+  </div>
+</div>
+<div id="toast" class="toast" hidden></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="qrcode.js"></script>
+<script src="characters.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
